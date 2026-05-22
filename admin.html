@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Order Admin</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg: #f6efe3;
+      --paper: #fffaf1;
+      --brown: #2a1d15;
+      --soft: #6d5746;
+      --line: rgba(80, 55, 35, 0.18);
+      --wine: #6f1d1b;
+      --olive: #4d5b36;
+      --blue: #2f4f6f;
+      --shadow: 0 16px 40px rgba(39, 25, 12, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #f8f0e5 0%, #f3eadc 100%);
+      color: var(--brown);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    header {
+      padding: 28px 18px;
+      background: var(--brown);
+      color: #fffaf1;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      font-size: 34px;
+    }
+
+    header p {
+      margin: 10px 0 0;
+      color: #dbc4a1;
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 20px 14px 60px;
+    }
+
+    .toolbar {
+      background: rgba(255, 250, 241, 0.82);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .status-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 10px 13px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .tab {
+      background: #fffaf1;
+      border: 1px solid var(--line);
+      color: var(--brown);
+    }
+
+    .tab.active {
+      background: var(--brown);
+      color: #fffaf1;
+    }
+
+    .refresh-btn {
+      background: var(--wine);
+      color: #fffaf1;
+    }
+
+    .summary {
+      color: var(--soft);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .orders {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .order-card {
+      background: rgba(255, 250, 241, 0.9);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 26px rgba(60, 37, 18, 0.08);
+      padding: 16px;
+    }
+
+    .order-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+
+    .table-no {
+      font-size: 28px;
+      color: var(--wine);
+    }
+
+    .order-no {
+      color: var(--soft);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .status {
+      height: fit-content;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: #fffaf1;
+      white-space: nowrap;
+    }
+
+    .status-new {
+      background: var(--wine);
+    }
+
+    .status-cooking {
+      background: var(--blue);
+    }
+
+    .status-done {
+      background: var(--olive);
+    }
+
+    .status-served {
+      background: var(--soft);
+    }
+
+    .status-cancelled {
+      background: #333;
+    }
+
+    .items {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .item-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(80, 55, 35, 0.16);
+      font-size: 16px;
+    }
+
+    .item-line span:last-child {
+      color: var(--wine);
+      white-space: nowrap;
+    }
+
+    .request {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(179, 139, 89, 0.1);
+      color: var(--soft);
+      line-height: 1.6;
+    }
+
+    .total {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 14px;
+      font-size: 18px;
+      color: var(--brown);
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .btn-cooking {
+      background: var(--blue);
+      color: #fffaf1;
+    }
+
+    .btn-done {
+      background: var(--olive);
+      color: #fffaf1;
+    }
+
+    .btn-served {
+      background: var(--soft);
+      color: #fffaf1;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--brown);
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--soft);
+      padding: 50px 20px;
+      background: rgba(255, 250, 241, 0.7);
+      border: 1px solid var(--line);
+    }
+
+    .error {
+      background: #fff0f0;
+      border: 1px solid #e3b5b5;
+      color: #8a1f1f;
+      padding: 14px;
+      line-height: 1.6;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    @media (min-width: 820px) {
+      .orders {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>ORDER ADMIN</h1>
+    <p>직원용 주문 확인 화면</p>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <div class="toolbar-row">
+        <div class="status-tabs">
+          <button class="tab active" onclick="setFilter('active', this)">진행 주문</button>
+          <button class="tab" onclick="setFilter('new', this)">신규</button>
+          <button class="tab" onclick="setFilter('cooking', this)">조리 중</button>
+          <button class="tab" onclick="setFilter('done', this)">완료</button>
+          <button class="tab" onclick="setFilter('served', this)">서빙 완료</button>
+          <button class="tab" onclick="setFilter('all', this)">전체</button>
+        </div>
+
+        <button class="refresh-btn" onclick="loadOrders()">새로고침</button>
+      </div>
+
+      <div class="summary" id="summary">
+        주문을 불러오는 중입니다.
+      </div>
+    </div>
+
+    <div class="error" id="errorBox"></div>
+
+    <section class="orders" id="ordersRoot"></section>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://dajayhmziyzruhlyrcpn.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhamF5aG16aXl6cnVobHlyY3BuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzYzNjgsImV4cCI6MjA5NDk1MjM2OH0.o3bB6MeJ_KMq59JnpvT7aKzQgQJTAlun1HVQ_4vcYWU";
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    let currentFilter = "active";
+
+    function formatStatus(status) {
+      const map = {
+        new: "신규",
+        cooking: "조리 중",
+        done: "완료",
+        served: "서빙 완료",
+        cancelled: "취소"
+      };
+
+      return map[status] || status;
+    }
+
+    function formatTime(dateText) {
+      const date = new Date(dateText);
+
+      return date.toLocaleString("ko-KR", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function priceToNumber(priceText) {
+      if (!priceText) return 0;
+      return Number(String(priceText).replace(/[^0-9]/g, ""));
+    }
+
+    function getTotal(items) {
+      return items.reduce((sum, item) => {
+        if (item.subtotal) return sum + item.subtotal;
+        return sum + priceToNumber(item.price) * item.qty;
+      }, 0);
+    }
+
+    function setFilter(filter, button) {
+      currentFilter = filter;
+
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.classList.remove("active");
+      });
+
+      button.classList.add("active");
+      loadOrders();
+    }
+
+    async function loadOrders() {
+      const errorBox = document.getElementById("errorBox");
+      const root = document.getElementById("ordersRoot");
+      const summary = document.getElementById("summary");
+
+      errorBox.style.display = "none";
+      root.innerHTML = "";
+      summary.textContent = "주문을 불러오는 중입니다.";
+
+      let query = supabaseClient
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (currentFilter === "active") {
+        query = query.in("status", ["new", "cooking", "done"]);
+      } else if (currentFilter !== "all") {
+        query = query.eq("status", currentFilter);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error(error);
+        errorBox.textContent = "주문을 불러오지 못했습니다. Supabase URL, anon key, RLS 정책을 확인해주세요.";
+        errorBox.style.display = "block";
+        summary.textContent = "오류 발생";
+        return;
+      }
+
+      renderOrders(data || []);
+    }
+
+    function renderOrders(orders) {
+      const root = document.getElementById("ordersRoot");
+      const summary = document.getElementById("summary");
+
+      if (orders.length === 0) {
+        summary.textContent = "현재 표시할 주문이 없습니다.";
+        root.innerHTML = `<div class="empty">표시할 주문이 없습니다.</div>`;
+        return;
+      }
+
+      const newCount = orders.filter(order => order.status === "new").length;
+      const cookingCount = orders.filter(order => order.status === "cooking").length;
+      const doneCount = orders.filter(order => order.status === "done").length;
+
+      summary.textContent = `표시 주문 ${orders.length}건 / 신규 ${newCount}건 / 조리 중 ${cookingCount}건 / 완료 ${doneCount}건`;
+
+      root.innerHTML = orders.map(order => {
+        const items = Array.isArray(order.items) ? order.items : [];
+        const total = getTotal(items).toLocaleString();
+
+        const itemLines = items.map(item => {
+          return `
+            <div class="item-line">
+              <div>${item.name} × ${item.qty}</div>
+              <span>${item.price || ""}</span>
+            </div>
+          `;
+        }).join("");
+
+        return `
+          <article class="order-card">
+            <div class="order-head">
+              <div>
+                <div class="table-no">Table ${order.table_no}</div>
+                <div class="order-no">${order.order_no}</div>
+                <div class="order-no">${formatTime(order.created_at)}</div>
+              </div>
+
+              <div class="status status-${order.status}">
+                ${formatStatus(order.status)}
+              </div>
+            </div>
+
+            <div class="items">
+              ${itemLines}
+            </div>
+
+            <div class="total">
+              <span>합계</span>
+              <strong>${total}원</strong>
+            </div>
+
+            <div class="request">
+              요청사항: ${order.request ? order.request : "없음"}
+            </div>
+
+            <div class="actions">
+              <button class="btn-cooking" onclick="updateStatus('${order.id}', 'cooking')">조리 중</button>
+              <button class="btn-done" onclick="updateStatus('${order.id}', 'done')">완료</button>
+              <button class="btn-served" onclick="updateStatus('${order.id}', 'served')">서빙 완료</button>
+              <button class="btn-cancel" onclick="updateStatus('${order.id}', 'cancelled')">취소</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    async function updateStatus(orderId, status) {
+      const { error } = await supabaseClient
+        .from("orders")
+        .update({ status })
+        .eq("id", orderId);
+
+      if (error) {
+        console.error(error);
+        alert("상태 변경에 실패했습니다.");
+        return;
+      }
+
+      loadOrders();
+    }
+
+    loadOrders();
+
+    setInterval(loadOrders, 5000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Italian Dining Menu</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg: #f6efe3;
+      --paper: #fffaf1;
+      --brown: #2a1d15;
+      --soft: #6d5746;
+      --line: rgba(80, 55, 35, 0.18);
+      --wine: #6f1d1b;
+      --gold: #b38b59;
+      --olive: #4d5b36;
+      --shadow: 0 18px 50px rgba(39, 25, 12, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #f8f0e5 0%, #f3eadc 100%);
+      color: var(--brown);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    button, textarea {
+      font-family: inherit;
+    }
+
+    .hero {
+      min-height: 420px;
+      padding: 44px 20px 34px;
+      background:
+        linear-gradient(rgba(20, 12, 8, 0.72), rgba(20, 12, 8, 0.78)),
+        url("https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1600&q=80");
+      background-size: cover;
+      background-position: center;
+      color: #fffaf1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .hero-inner {
+      max-width: 760px;
+      border: 1px solid rgba(255, 250, 241, 0.34);
+      padding: 38px 24px;
+      background: rgba(35, 20, 12, 0.44);
+      backdrop-filter: blur(4px);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 16px;
+      color: #dbc4a1;
+      letter-spacing: 0.24em;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(38px, 10vw, 74px);
+      letter-spacing: 0.08em;
+      font-weight: 400;
+    }
+
+    .hero p {
+      margin: 18px auto 0;
+      max-width: 520px;
+      color: #eadbc7;
+      line-height: 1.75;
+      font-size: 15px;
+    }
+
+    .table-badge {
+      display: inline-flex;
+      margin-top: 22px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(255, 250, 241, 0.14);
+      border: 1px solid rgba(255, 250, 241, 0.28);
+      color: #fff7e8;
+      font-size: 13px;
+    }
+
+    .sticky-nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 10px 12px;
+      background: rgba(246, 239, 227, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .nav-row {
+      display: flex;
+      gap: 8px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .nav-row a {
+      text-decoration: none;
+      color: var(--brown);
+      border: 1px solid var(--line);
+      padding: 9px 13px;
+      border-radius: 999px;
+      background: rgba(255, 250, 241, 0.72);
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 34px 18px 120px;
+    }
+
+    .notice {
+      background: rgba(255, 250, 241, 0.78);
+      border: 1px solid var(--line);
+      padding: 18px;
+      line-height: 1.7;
+      color: var(--soft);
+      margin-bottom: 28px;
+    }
+
+    .category {
+      margin-top: 36px;
+      padding-top: 14px;
+    }
+
+    .category-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .category-title {
+      margin: 0;
+      font-size: clamp(28px, 7vw, 46px);
+      font-weight: 400;
+      color: var(--brown);
+    }
+
+    .category-sub {
+      color: var(--gold);
+      font-style: italic;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .menu-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .menu-item {
+      background: rgba(255, 250, 241, 0.9);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 26px rgba(60, 37, 18, 0.06);
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .menu-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .menu-name {
+      font-size: 21px;
+      line-height: 1.25;
+    }
+
+    .menu-price {
+      color: var(--wine);
+      font-size: 16px;
+      white-space: nowrap;
+    }
+
+    .menu-desc {
+      color: var(--soft);
+      line-height: 1.65;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      display: inline-flex;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      color: var(--olive);
+      border: 1px solid rgba(77, 91, 54, 0.22);
+      background: rgba(77, 91, 54, 0.08);
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 0;
+      cursor: pointer;
+      padding: 11px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: var(--brown);
+      color: #fffaf1;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--brown);
+    }
+
+    .btn-wine {
+      background: var(--wine);
+      color: #fffaf1;
+    }
+
+    .floating-cart {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      z-index: 20;
+      max-width: 720px;
+      margin: 0 auto;
+      background: rgba(42, 29, 21, 0.96);
+      color: #fffaf1;
+      border: 1px solid rgba(255, 250, 241, 0.18);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .cart-summary {
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .cart-summary span {
+      color: #dbc4a1;
+    }
+
+    .cart-open {
+      background: #fffaf1;
+      color: var(--brown);
+      border: 0;
+      padding: 11px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .drawer {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+    }
+
+    .drawer.is-open {
+      display: block;
+    }
+
+    .drawer-bg {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.42);
+    }
+
+    .drawer-panel {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: min(92vw, 460px);
+      background: var(--paper);
+      box-shadow: -18px 0 50px rgba(0, 0, 0, 0.24);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .drawer-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .drawer-head h2 {
+      margin: 0;
+      font-weight: 400;
+      font-size: 28px;
+    }
+
+    .close-btn {
+      border: 1px solid var(--line);
+      background: transparent;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .cart-empty {
+      color: var(--soft);
+      line-height: 1.6;
+      padding: 18px 0;
+    }
+
+    .cart-line {
+      border-bottom: 1px solid var(--line);
+      padding: 13px 0;
+      display: grid;
+      gap: 9px;
+    }
+
+    .cart-line-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .cart-line-name {
+      font-size: 17px;
+    }
+
+    .qty {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px;
+      background: #fffdf7;
+    }
+
+    .qty button {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 0;
+      background: var(--brown);
+      color: #fffaf1;
+      cursor: pointer;
+    }
+
+    .qty span {
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .request-box {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .request-box label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--soft);
+      font-size: 14px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 86px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      background: #fffdf7;
+      padding: 12px;
+      color: var(--brown);
+      font-size: 15px;
+      outline: none;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .drawer-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 92px;
+      transform: translateX(-50%);
+      z-index: 40;
+      background: var(--wine);
+      color: #fffaf1;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      display: none;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--soft);
+      padding: 40px 20px;
+      line-height: 1.7;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 250, 241, 0.44);
+    }
+
+    @media (min-width: 780px) {
+      .menu-list {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .menu-item.featured {
+        grid-column: span 2;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Authentic Italian Dining</p>
+      <h1 id="restaurantTitle">MENU</h1>
+      <p>
+        좋은 식사는 천천히 고르는 순간부터 시작됩니다.
+        메뉴를 선택해 장바구니에 담고 주문을 넣어주세요.
+      </p>
+      <div class="table-badge" id="tableBadge">Table 확인 중</div>
+    </div>
+  </header>
+
+  <nav class="sticky-nav">
+    <div class="nav-row" id="categoryNav"></div>
+  </nav>
+
+  <main>
+    <div class="notice">
+      메뉴를 누르면 상세 설명을 확인할 수 있고, “담기” 버튼을 누르면 장바구니에 추가됩니다.
+      주문이 접수되면 직원용 화면에 표시됩니다.
+    </div>
+
+    <div id="menuRoot"></div>
+  </main>
+
+  <footer>
+    Thank you for dining with us.<br />
+    메뉴 설명, 가격, 알레르기 정보는 매장 상황에 따라 변경될 수 있습니다.
+  </footer>
+
+  <div class="floating-cart">
+    <div class="cart-summary" id="cartSummary">
+      장바구니가 비어 있습니다.<br />
+      <span>메뉴를 담아주세요.</span>
+    </div>
+    <button class="cart-open" onclick="openCart()">주문 확인</button>
+  </div>
+
+  <aside class="drawer" id="cartDrawer">
+    <div class="drawer-bg" onclick="closeCart()"></div>
+
+    <div class="drawer-panel">
+      <div class="drawer-head">
+        <h2>Order</h2>
+        <button class="close-btn" onclick="closeCart()">×</button>
+      </div>
+
+      <div id="cartList"></div>
+
+      <div class="quick-actions">
+        <button class="btn btn-secondary" onclick="addQuickRequest('직원 호출')">직원 호출</button>
+        <button class="btn btn-secondary" onclick="addQuickRequest('물 요청')">물 요청</button>
+        <button class="btn btn-secondary" onclick="addQuickRequest('앞접시 요청')">앞접시 요청</button>
+        <button class="btn btn-secondary" onclick="addQuickRequest('계산 요청')">계산 요청</button>
+      </div>
+
+      <div class="request-box">
+        <label for="requestText">요청사항</label>
+        <textarea id="requestText" placeholder="예: 덜 맵게 해주세요 / 알레르기 있습니다 / 물 부탁드립니다"></textarea>
+      </div>
+
+      <div class="drawer-actions">
+        <button class="btn btn-wine" onclick="submitOrder()">주문 넣기</button>
+        <button class="btn btn-primary" onclick="copyOrder()">주문 내용 복사</button>
+        <button class="btn btn-secondary" onclick="clearCart()">장바구니 비우기</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast">완료</div>
+
+  <script>
+    const RESTAURANT_NAME = "ITALIAN DINING";
+
+    const SUPABASE_URL = "https://dajayhmziyzruhlyrcpn.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhamF5aG16aXl6cnVobHlyY3BuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzYzNjgsImV4cCI6MjA5NDk1MjM2OH0.o3bB6MeJ_KMq59JnpvT7aKzQgQJTAlun1HVQ_4vcYWU";
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    const menuData = [
+      {
+        id: "antipasto",
+        title: "Antipasto",
+        subtitle: "Before the meal",
+        items: [
+          {
+            name: "Bruschetta",
+            desc: "바삭하게 구운 빵 위에 토마토, 올리브 오일, 허브를 올린 이탈리안 전채",
+            price: "9,000원",
+            tags: ["BEST", "APPETIZER"]
+          },
+          {
+            name: "Pane azzimo",
+            desc: "담백하고 가벼운 식전 빵. 파스타와 메인 요리 전 입맛을 정리하기 좋습니다.",
+            price: "6,000원",
+            tags: ["LIGHT"]
+          }
+        ]
+      },
+      {
+        id: "primo",
+        title: "Primo Piatto",
+        subtitle: "Pasta & Risotto",
+        items: [
+          {
+            name: "Aglio olio",
+            desc: "마늘, 올리브 오일, 페페론치노를 중심으로 만든 가장 기본적이면서도 섬세한 파스타",
+            price: "15,000원",
+            tags: ["CLASSIC"]
+          },
+          {
+            name: "Carbonara",
+            desc: "달걀, 치즈, 후추의 진한 풍미가 중심이 되는 이탈리안 스타일 파스타",
+            price: "18,000원",
+            tags: ["BEST"]
+          },
+          {
+            name: "Tomato pasta",
+            desc: "토마토의 산미와 감칠맛을 살린 깔끔한 파스타",
+            price: "16,000원",
+            tags: ["FRESH"]
+          },
+          {
+            name: "Pollok roe butter pasta",
+            desc: "명란의 짭조름한 감칠맛과 버터의 부드러운 풍미를 더한 파스타",
+            price: "18,000원",
+            tags: ["CREAMY"]
+          },
+          {
+            name: "American chef’s aglio olio",
+            desc: "기본 알리오 올리오에 셰프의 해석을 더한 시그니처 스타일 파스타",
+            price: "19,000원",
+            tags: ["SIGNATURE", "CHEF'S PICK"]
+          },
+          {
+            name: "Anchovy pasta",
+            desc: "엔초비의 깊은 감칠맛과 올리브 오일의 향을 살린 파스타",
+            price: "17,000원",
+            tags: ["UMAMI"]
+          },
+          {
+            name: "Rosé pasta",
+            desc: "토마토 소스의 산미와 크림의 부드러움이 어우러진 로제 파스타",
+            price: "17,000원",
+            tags: ["SOFT"]
+          },
+          {
+            name: "Risotto ai funghi",
+            desc: "버섯의 향과 쌀의 농도를 살린 이탈리안 버섯 리조토",
+            price: "19,000원",
+            tags: ["RICH"]
+          }
+        ]
+      },
+      {
+        id: "secondo",
+        title: "Secondo Piatto",
+        subtitle: "Main dish",
+        items: [
+          {
+            name: "Tagliata di Manzo",
+            desc: "소고기를 먹기 좋은 두께로 썰어 제공하는 이탈리안 메인 디시",
+            price: "38,000원",
+            tags: ["MAIN", "SIGNATURE"]
+          }
+        ]
+      },
+      {
+        id: "contorno",
+        title: "Contorno",
+        subtitle: "Side dish",
+        items: [
+          {
+            name: "Caponata",
+            desc: "가지와 채소를 새콤달콤하게 조리한 시칠리아식 사이드 디시",
+            price: "8,000원",
+            tags: ["SIDE"]
+          }
+        ]
+      },
+      {
+        id: "dolce",
+        title: "Dolce",
+        subtitle: "Dessert",
+        items: [
+          {
+            name: "Tiramisu",
+            desc: "커피와 마스카포네의 풍미가 어우러지는 대표 이탈리안 디저트",
+            price: "8,000원",
+            tags: ["DESSERT", "BEST"]
+          }
+        ]
+      },
+      {
+        id: "caffe",
+        title: "Caffè",
+        subtitle: "After meal",
+        items: [
+          {
+            name: "Espresso",
+            desc: "식사의 마무리에 어울리는 진한 이탈리안 커피",
+            price: "4,000원",
+            tags: ["COFFEE"]
+          }
+        ]
+      }
+    ];
+
+    let cart = [];
+
+    const params = new URLSearchParams(window.location.search);
+    const tableNumber = params.get("table") || "미지정";
+
+    document.getElementById("restaurantTitle").textContent = RESTAURANT_NAME;
+    document.getElementById("tableBadge").textContent = `Table ${tableNumber}`;
+
+    function renderNav() {
+      const nav = document.getElementById("categoryNav");
+      nav.innerHTML = menuData
+        .map(category => `<a href="#${category.id}">${category.title}</a>`)
+        .join("");
+    }
+
+    function renderMenu() {
+      const root = document.getElementById("menuRoot");
+
+      root.innerHTML = menuData.map(category => {
+        const itemsHtml = category.items.map(item => {
+          const itemKey = encodeURIComponent(item.name);
+
+          const tagsHtml = item.tags.map(tag => {
+            return `<span class="tag">${tag}</span>`;
+          }).join("");
+
+          return `
+            <article class="menu-item ${item.tags.includes("SIGNATURE") ? "featured" : ""}">
+              <div class="menu-top">
+                <div class="menu-name">${item.name}</div>
+                <div class="menu-price">${item.price}</div>
+              </div>
+
+              <p class="menu-desc">${item.desc}</p>
+
+              <div class="tag-row">${tagsHtml}</div>
+
+              <div class="item-actions">
+                <button class="btn btn-primary" onclick="addToCart('${itemKey}')">담기</button>
+                <button class="btn btn-secondary" onclick="showDetail('${itemKey}')">설명 보기</button>
+              </div>
+            </article>
+          `;
+        }).join("");
+
+        return `
+          <section class="category" id="${category.id}">
+            <div class="category-head">
+              <h2 class="category-title">${category.title}</h2>
+              <div class="category-sub">${category.subtitle}</div>
+            </div>
+            <div class="menu-list">${itemsHtml}</div>
+          </section>
+        `;
+      }).join("");
+    }
+
+    function findItemByName(encodedName) {
+      const name = decodeURIComponent(encodedName);
+
+      for (const category of menuData) {
+        const item = category.items.find(menu => menu.name === name);
+        if (item) return item;
+      }
+
+      return null;
+    }
+
+    function priceToNumber(priceText) {
+      if (!priceText) return 0;
+      return Number(String(priceText).replace(/[^0-9]/g, ""));
+    }
+
+    function getCartTotal() {
+      return cart.reduce((sum, item) => {
+        return sum + priceToNumber(item.price) * item.qty;
+      }, 0);
+    }
+
+    function addToCart(encodedName) {
+      const item = findItemByName(encodedName);
+      if (!item) return;
+
+      const existing = cart.find(cartItem => cartItem.name === item.name);
+
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({
+          name: item.name,
+          qty: 1,
+          price: item.price
+        });
+      }
+
+      updateCart();
+      showToast(`${item.name} 담김`);
+    }
+
+    function showDetail(encodedName) {
+      const item = findItemByName(encodedName);
+      if (!item) return;
+
+      alert(`${item.name}\n\n${item.desc}\n\n가격: ${item.price}\n태그: ${item.tags.join(", ")}`);
+    }
+
+    function updateCart() {
+      const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+      const totalPrice = getCartTotal().toLocaleString();
+      const summary = document.getElementById("cartSummary");
+
+      if (totalQty === 0) {
+        summary.innerHTML = `장바구니가 비어 있습니다.<br /><span>메뉴를 담아주세요.</span>`;
+      } else {
+        summary.innerHTML = `총 ${totalQty}개 / ${totalPrice}원<br /><span>Table ${tableNumber} 주문 확인</span>`;
+      }
+
+      renderCartList();
+    }
+
+    function renderCartList() {
+      const list = document.getElementById("cartList");
+
+      if (cart.length === 0) {
+        list.innerHTML = `<div class="cart-empty">아직 담긴 메뉴가 없습니다.</div>`;
+        return;
+      }
+
+      const cartHtml = cart.map(item => {
+        const key = encodeURIComponent(item.name);
+
+        return `
+          <div class="cart-line">
+            <div class="cart-line-top">
+              <div>
+                <div class="cart-line-name">${item.name}</div>
+                <div class="menu-desc">${item.price}</div>
+              </div>
+
+              <div class="qty">
+                <button onclick="changeQty('${key}', -1)">−</button>
+                <span>${item.qty}</span>
+                <button onclick="changeQty('${key}', 1)">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const total = getCartTotal().toLocaleString();
+
+      list.innerHTML = `
+        ${cartHtml}
+        <div class="total" style="display:flex; justify-content:space-between; margin-top:16px; font-size:18px;">
+          <strong>합계</strong>
+          <strong>${total}원</strong>
+        </div>
+      `;
+    }
+
+    function changeQty(encodedName, amount) {
+      const name = decodeURIComponent(encodedName);
+      const item = cart.find(cartItem => cartItem.name === name);
+      if (!item) return;
+
+      item.qty += amount;
+
+      if (item.qty <= 0) {
+        cart = cart.filter(cartItem => cartItem.name !== name);
+      }
+
+      updateCart();
+    }
+
+    function openCart() {
+      document.getElementById("cartDrawer").classList.add("is-open");
+      renderCartList();
+    }
+
+    function closeCart() {
+      document.getElementById("cartDrawer").classList.remove("is-open");
+    }
+
+    function clearCart() {
+      if (!confirm("장바구니를 비울까요?")) return;
+
+      cart = [];
+      document.getElementById("requestText").value = "";
+      updateCart();
+      showToast("장바구니를 비웠습니다");
+    }
+
+    function addQuickRequest(text) {
+      const requestBox = document.getElementById("requestText");
+      const current = requestBox.value.trim();
+
+      requestBox.value = current ? `${current}, ${text}` : text;
+
+      showToast(`${text} 추가`);
+    }
+
+    function createOrderId() {
+      const now = new Date();
+
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      const h = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const s = String(now.getSeconds()).padStart(2, "0");
+
+      return `${y}${m}${d}-${h}${min}${s}`;
+    }
+
+    function buildOrderText() {
+      const request = document.getElementById("requestText").value.trim();
+      const orderId = createOrderId();
+      const total = getCartTotal().toLocaleString();
+
+      let lines = [];
+      lines.push(`[${RESTAURANT_NAME} 주문]`);
+      lines.push(`주문번호: ${orderId}`);
+      lines.push(`테이블: ${tableNumber}`);
+      lines.push("");
+      lines.push("[메뉴]");
+
+      if (cart.length === 0) {
+        lines.push("담긴 메뉴 없음");
+      } else {
+        cart.forEach(item => {
+          lines.push(`- ${item.name} x ${item.qty} / ${item.price}`);
+        });
+      }
+
+      lines.push("");
+      lines.push(`[합계] ${total}원`);
+      lines.push("");
+      lines.push("[요청사항]");
+      lines.push(request || "없음");
+
+      return lines.join("\n");
+    }
+
+    async function copyOrder() {
+      const text = buildOrderText();
+
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("주문 내용이 복사되었습니다");
+      } catch (error) {
+        alert(text);
+      }
+    }
+
+    async function submitOrder() {
+      if (cart.length === 0) {
+        alert("먼저 메뉴를 담아주세요.");
+        return;
+      }
+
+      const request = document.getElementById("requestText").value.trim();
+      const orderNo = createOrderId();
+
+      const items = cart.map(item => ({
+        name: item.name,
+        qty: item.qty,
+        price: item.price,
+        subtotal: priceToNumber(item.price) * item.qty
+      }));
+
+      const orderData = {
+        order_no: orderNo,
+        table_no: String(tableNumber),
+        items: items,
+        request: request || "",
+        status: "new"
+      };
+
+      const { error } = await supabaseClient
+        .from("orders")
+        .insert(orderData);
+
+      if (error) {
+        console.error(error);
+        alert("주문 저장에 실패했습니다. 직원에게 직접 말씀해주세요.");
+        return;
+      }
+
+      alert(`주문이 접수되었습니다.\n주문번호: ${orderNo}`);
+
+      cart = [];
+      document.getElementById("requestText").value = "";
+      updateCart();
+      closeCart();
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1600);
+    }
+
+    renderNav();
+    renderMenu();
+    updateCart();
+  </script>
+</body>
+</html>
